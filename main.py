@@ -1,7 +1,7 @@
 import random
 import enum
 import colorama as color
-import replit
+import os
 
 
 def random_bool():
@@ -68,65 +68,57 @@ class EnemyCell(Cell):
             2: MonsterAction.DODGE
         }
 
+        status = 0
+        message = "You encountered a monster! How do you respond?"
         while True:
             self.world.render()
-            print(f"You encountered a monster! How do you respond?")
-
+            print(message)
+            if status != 0:
+                break
             for (i, action) in options.items():
                 print(f"{i}. {action.name.capitalize()}")
-
+                
             try:
                 option_in = int(input(""))
             except:
                 continue
-
+            
             option = options.get(option_in)
 
-            if option != None:
-                break
-
-        while True:
-            self.world.render()
             if option == MonsterAction.DODGE:
                 if random_bool():
-                    print(f"You dodged! What do you do next?")
+                    message = "You dodged! What do you do next?"
+                    status = 1
+                    self.symbol = "  "
                 elif random_bool():
-                    print(f"The monster did not attack! What do you do next?")
+                    message = "The monster did not attack! What do you do next?"
                 elif random_bool():
-                    print(f"You tried dodging but failed, however the monster did not attack! What do you do next?")
+                    message ="You tried dodging but failed, however the monster did not attack! What do you do next?"
                 else:
-                    print(f"You failed dodging and the monster killed you!")
-                    break
+                    message ="You failed dodging and the monster killed you!"
+                    status = -1
             elif option == MonsterAction.ATTACK:
                 if random_bool():
-                    print(
-                        f"You damaged the monster, however the monster flinched and could not move! What do you do next?")
+                    message = "You damaged the monster, however the monster flinched and could not move! What do you do next?"
                 elif random_bool():
-                    print(f"You damaged the monster and it damaged you back! What do you do next?")
+                    message = "You damaged the monster and it damaged you back! What do you do next?"
                 elif random_bool():
-                    print(f"You killed the monster! What do you do next?")
+                    message ="You killed the monster! What do you do next?"
+                    status = 1
+                    self.symbol = "  "
                 elif random_bool():
-                    print(f"Your attack failed and the monster damaged you back! What do you do next?")
+                    message ="Your attack failed and the monster damaged you back! What do you do next?"
                 elif random_bool():
-                    print(f"Your attack failed and the monster attacked you back and killed you!")
-                    break
+                    message ="Your attack failed and the monster attacked you back and killed you!"
+                    status = -1
                 else:
-                    print(f"You damaged the monster and it attacked you back and killed you!")
-                    break
+                    message ="You damaged the monster and it attacked you back and killed you!"
+                    status = -1
 
-            for (i, action) in options.items():
-                print(f"{i}. {action.name.capitalize()}")
-
-            try:
-                option_in = int(input(""))
-            except:
-                continue
-
-            option = options.get(option_in)
-
-            if option != None:
-                continue
-
+        if status == -1:
+            exit(0)
+            return False
+        return True
 
 class EmptyCell(Cell):
     def __init__(self):
@@ -195,7 +187,11 @@ class World():
         cell.world = self
 
     def render(self):
-        replit.clear()
+        if os.name == "nt":
+            os.system("cls")
+        elif os.name == "posix":
+            os.system("clear")
+        print("EPIC GAME")
         for row in self.arena:
             for cell in row:
                 if cell == None:
@@ -249,7 +245,7 @@ class World():
     def get_cell(self, pos):
         return self.arena[pos.y - 1][pos.x - 1]
 
-    # TODO
+
     def get_cell_offset(self, pos, direction):
         if direction == Direction.NORTH:
             return self.arena[pos.y - 2][pos.x - 1]
@@ -289,11 +285,12 @@ def main():
 
         option = options.get(option_in)
 
-        if option != None:
-            break
+        if option == None:
+            continue
 
-    offset = world.get_cell_offset(hero.pos, option)
-    offset.reveal(hero)
+        offset = world.get_cell_offset(hero.pos, option)
+        if offset.reveal(hero):
+            
 
 
 if __name__ == "__main__":
